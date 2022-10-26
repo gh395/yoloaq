@@ -1,0 +1,6 @@
+The following were excluded from the repo due to git lfs storage restrictions:
+
+-unpaved parking lot
+-unpaved with trucks
+-large parking lot
+-airport facilities
