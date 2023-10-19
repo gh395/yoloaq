@@ -15,9 +15,12 @@ import argparse
 from tensorflow.keras.preprocessing import image
 from tensorflow.keras.applications.xception import preprocess_input as preprocess_input_xception
 from glob import glob
+from dotenv import dotenv_values
 
-api_key = 'AIzaSyB-XTkheRppWGlcJ8tbEUwDNRksZ37Iyi4'
-secret = 'QFkeZ_WWEa5U2-LkoxbvMoWG1_E='
+# generate api key from Google's Maps Static API
+config = dotenv_values(".env")
+api_key = config['API_KEY']
+secret = config['SECRET']
 
 
 def sign_url(input_url=None, secret=None):
@@ -242,7 +245,7 @@ def img_scrape_surr(lat, lng, n, m, zoom=18):
     get_merged_img(dirname, img_files, 'merged.png', n, m)
 
 
-def run_yolo(dirname, n, m, model_fn, conf):
+def run_yolo(dirname, n, m, model_fn, conf=0.1):
     """
     Runs YOLO model on grid of images and generates data csv file that contains 
     information about area covered by each class
@@ -264,8 +267,6 @@ def run_yolo(dirname, n, m, model_fn, conf):
 
     Returns: None (generates csv output)
     """
-    if conf is None:
-        conf = 0.1
     bashCom = "python yolov5/detect.py --weights "+model_fn+" --img 512 --conf " + \
         str(conf) + " --project " + dirname + \
         " --name yolo --save-txt --source " + dirname
@@ -694,9 +695,9 @@ def parse_opt():
     parser.add_argument('-lng', type=float, help='longitude', required=True)
     parser.add_argument('-n', type=int, help='num rows', required=True)
     parser.add_argument('-m', type=int, help='num cols', required=True)
-    parser.add_argument('-z', type=int, help='zoom level (18 default)', const=18, default=18)
-    parser.add_argument('-rm', type=str,
-                        help='run multilabel model')
+    parser.add_argument(
+        '-z', type=int, help='zoom level (18 default)', nargs='?', default=18)
+    parser.add_argument('-rm', type=str, help='run multilabel model')
     parser.add_argument('-rb', type=str, help='run binary model')
     parser.add_argument('-ry', type=str, help='run yolo model')
     parser.add_argument(
@@ -706,6 +707,8 @@ def parse_opt():
     parser.add_argument(
         '-outb', type=str, help='(optional) output folder name for binary model')
     opt = parser.parse_args()
+    if not (opt.rm or opt.rb or opt.ry):
+        parser.error('No action requested, add any of [-rm -rb -ry]')
     return opt
 
 
